@@ -1,8 +1,9 @@
 {
   "name": "ts-ast-api",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "dependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "lz-string": "^1.5.0"
   }
 }
