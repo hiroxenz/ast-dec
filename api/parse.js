@@ -17,12 +17,10 @@ export default async function handler(req, res) {
       true
     );
 
-    // Konversi ke JSON tapi hapus property 'parent' agar tidak rekursif
-    const astJSON = JSON.parse(
-      JSON.stringify(sourceFile, (key, value) => (key === "parent" ? undefined : value))
-    );
+    // Hapus referensi parent agar tidak rekursif
+    const ast = JSON.parse(JSON.stringify(sourceFile, (k, v) => (k === "parent" ? undefined : v)));
 
-    return res.status(200).json({ success: true, ast: astJSON });
+    return res.status(200).json({ success: true, ast });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
