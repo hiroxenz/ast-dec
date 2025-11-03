@@ -9,13 +9,18 @@ export default async function handler(req, res) {
 
     let { code, encoded } = req.body || {};
 
-    // Jika input berupa kode encoded dari ts-ast-viewer.com
+    // Jika input berupa kode encoded dari TS AST Viewer
     if (encoded && !code) {
       try {
-        // decode dari Base64 + URI ke kode TS mentah
         code = LZString.decompressFromEncodedURIComponent(encoded);
+
+        if (!code) {
+          return res.status(400).json({
+            error: "Failed to decompress — encoded string invalid or truncated"
+          });
+        }
       } catch (e) {
-        return res.status(400).json({ error: "Failed to decode encoded string" });
+        return res.status(400).json({ error: "Failed to decode encoded string", details: e.message });
       }
     }
 
@@ -24,13 +29,19 @@ export default async function handler(req, res) {
     }
 
     // Parse kode TypeScript
-    const sourceFile = ts.createSourceFile("temp.ts", code, ts.ScriptTarget.Latest, true);
+    let sourceFile;
+    try {
+      sourceFile = ts.createSourceFile("temp.ts", code, ts.ScriptTarget.Latest, true);
+    } catch (err) {
+      return res.status(400).json({ error: "TypeScript parse failed", details: err.message });
+    }
 
-    // Hilangkan parent property biar tidak rekursif
+    // Hilangkan property parent biar tidak rekursif
     const ast = JSON.parse(JSON.stringify(sourceFile, (k, v) => (k === "parent" ? undefined : v)));
 
     return res.status(200).json({ success: true, code, ast });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    console.error("[API ERROR]", err);
+    return res.status(500).json({ error: err.message || "Unknown error" });
   }
 }
